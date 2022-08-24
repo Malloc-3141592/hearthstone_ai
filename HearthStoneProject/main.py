@@ -351,16 +351,15 @@ def fightTurn():  # 전투 단계
                 else:
                     attack(i, "opponent")
 
-if __name__=='main':
-    init()
-    done = False
-    while not done:
-        for event in pg.event.get():
-            if event.type == QUIT:
-                done = True
-            # elif event.type == KEYDOWN:
-            elif event.type == MOUSEBUTTONDOWN:
-                clicked = True
-                # event.pos[0]: cell size_column
-                # event.pos[1]: cell size_row
-        pg.display.flip()
+init()
+done = False
+while not done:
+    for event in pg.event.get():
+        if event.type == QUIT:
+            done = True
+        # elif event.type == KEYDOWN:
+        elif event.type == MOUSEBUTTONDOWN:
+            clicked = True
+            # event.pos[0]: cell size_column
+            # event.pos[1]: cell size_row
+    pg.display.flip()
