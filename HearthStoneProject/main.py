@@ -23,12 +23,14 @@ class Card:
 
 
 pg.init()
-screen = pg.display.set_mode((640, 480))
+screen = pg.display.set_mode((1280, 720))
 pg.display.set_caption('HearthStone_Beta')
 stop = 0
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+YELLOW = (255,255,0)
 sec = 1
+opponentline=-1
 end_time = 20
 playerCard = []  # 플레이어가 들고 있는 카드
 playerGoldenCard = []  # 플레이어가 들고 있는 황금 카드
@@ -54,6 +56,8 @@ cardCount = []
 cardBound = [6, 15]
 font30 = pg.font.Font('NanumGothic.ttf', 30)
 font20 = pg.font.Font('NanumGothic.ttf', 20)
+opponentGround_file = open('op1.txt')
+
 '''
 cardStats -> <Level> <Attack> <Health> <Ability> <Tribe>
 goldencardStats -> <Attack> <Health> <Ability>
@@ -124,12 +128,14 @@ def init():  # init
     cardName_file = open('cardName.txt')
     cardStats_file = open('cardStats.txt')
     goldencardStats_file = open('goldencardStats.txt')
+
     i = 0
     upgrade_cost = shopLevel_cost[0]
     freezed = False
     upgraded = True
     max_gold = 3
     gold = max_gold
+
     # 카드 이름 입력
     while True:
         tmp = cardName_file.readline()
@@ -144,6 +150,7 @@ def init():  # init
         cardList[i].name = tmp
         cardImg.append(pg.image.load('image/' + tmp + '.png'))
         cardImg[i] = pg.transform.scale(cardImg[i], (100, 120))
+        cardList[i].img=cardImg[i]
         if i < 6:
             goldencardImg.append(pg.image.load('goldenimage/' + tmp + '.png'))
             goldencardImg[i] = pg.transform.scale(goldencardImg[i], (100, 120))
@@ -205,9 +212,11 @@ def buy(boughtNumber):  # 하수인 고용
     if 3 <= gold:
         gold -= 3
         playerCard.append(buyCard)
+        playerGround.append(buyCard)
         if playerCard.count(buyCard) == 3:
             for i in range(3):
                 playerCard.remove(buyCard)
+                putDown(buyCard)
             playerGoldenCard.append(buyCard)
         buyList.remove(buyCard)
         printText()
@@ -248,11 +257,16 @@ def attack(attackerNum, whoTurn):  # 공격(공격하는 유닛, 플레이어)
             opponentGround[attackerNum].fighthealth -= playerGround[tauntArr[tmp]].attack
 
 
-# def heroAbility(heroNumber): # 우두머리 능력
+def heroAbility(heroNumber): # 우두머리 능력
+    global gold
+    #if gold > 1:
+
 
 
 def buyTurn():  # 고용 단계
-    global gold, max_gold, upgrade_cost, max_gold, upgraded, freezed, shopCard_number, sec
+    global gold, max_gold, upgrade_cost, max_gold, upgraded, freezed, shopCard_number, sec, opponentline
+    opponentline += 3
+
     start_time = time.time()
     end_time = 0
     gold = max_gold
@@ -266,6 +280,9 @@ def buyTurn():  # 고용 단계
     printText()
     sec = 1
     startTimer()
+    tmp = opponentGround_file.readlines()[opponentline]
+    opponentGround=tmp.split()
+    opponentGround=list(map(int,opponentGround))
     while end_time - start_time < 20:
         end_time = time.time()
         for event in pg.event.get():
@@ -299,11 +316,12 @@ def buyTurn():  # 고용 단계
                 elif event.key == pg.K_6:
                     if len(buyList) > 5:
                         buy(5)
-    buyTurn()
+    fightTurn()
     upgraded = False
 
 
 def fightTurn():  # 전투 단계
+    screen.fill(BLACK)
     global playerGround, opponentGround, p2Ground, p3Ground, p4Ground
     tmp = rd.randint(1, 3)  # 어떤 상대와 싸우는지 정함
     first = 0  # first=1이면 내가 선공, 0이면 상대가 선공
@@ -323,6 +341,12 @@ def fightTurn():  # 전투 단계
             first = "opponent"
     else:
         first = "opponent"
+    for i in range(len(playerGround)):
+        screen.blit(playerGround[i].img,(i*130, 300))
+    for i in range(len(opponentGround)):
+        screen.blit(opponentGround[i].img, (i*130,0))
+
+
     # 여기까지 선공 정하기 구현
     if first == "player":
         for i in range(0, 7, 1):
