@@ -16,12 +16,19 @@ done = False
 cardName_file = open('cardName.txt')
 cardImg=[]
 i=0
+rrButton=pg.image.load('reroll.png')
+upButton=pg.image.load('upgrade.png')
+freezeButton=pg.image.load('freeze.png')
+rrButton=pg.transform.scale(rrButton, (50,50))
+upButton=pg.transform.scale(upButton, (50,50))
+freezeButton=pg.transform.scale(freezeButton, (50,50))
+
 while True:
     tmp = cardName_file.readline()
     if not tmp: break
     tmp = tmp.strip()  # cardName.txt
     cardImg.append(pg.image.load('image/' + tmp + '.png'))
-    cardImg[i] = pg.transform.scale(cardImg[i], (100, 120))
+    cardImg[i] = pg.transform.scale(cardImg[i], (200, 240))
     i+=1
 
 screen.fill(BLACK)
@@ -52,9 +59,11 @@ screen.blit(levelimg, (20, 235))
 text1 = 'Upgrade Cost: 5'
 upgrade_costimg = font30.render(text1, True, WHITE)
 screen.blit(upgrade_costimg, (20, 270))
-text2 = 'F key: Freeze // U key: Upgrade // R key: Reroll'
-manualimg = font20.render(text2, True, WHITE)
-screen.blit(manualimg, (20, 400))
+
+screen.blit(rrButton, (150,0))
+screen.blit(upButton, (210,0))
+screen.blit(freezeButton, (270,0))
+
 pg.display.flip()
 
 while not done:
@@ -64,5 +73,12 @@ while not done:
         elif event.type == MOUSEBUTTONDOWN:
             col=event.pos[0]
             row=event.pos[1]
+            if col>=150 and col<=200 and row>=0 and row<=50:
+                pass # reroll
+            elif col>=210 and col<=260 and row>=0 and row<=50:
+                pass # upgrade
+            elif col>=270 and col<=320 and row>=0 and row<=50:
+                pass # freeze
+
             print(col, row)
     pg.display.flip()
