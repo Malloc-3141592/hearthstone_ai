@@ -13,6 +13,7 @@ class Card:
         self.attack = 0
         self.health = 0
         self.fighthealth = 0
+        self.fightattack = 0
         self.tribe = 0
         self.img = 0
         self.level = 0
@@ -31,6 +32,7 @@ BLACK = (0, 0, 0)
 YELLOW = (255,255,0)
 sec = 1
 Round = 0
+
 end_time = 20
 playerCard = []  # 플레이어가 들고 있는 카드
 playerGoldenCard = []  # 플레이어가 들고 있는 황금 카드
@@ -64,7 +66,6 @@ rrButton=pg.transform.scale(rrButton, (50,50))
 upButton=pg.transform.scale(upButton, (50,50))
 freezeButton=pg.transform.scale(freezeButton, (50,50))
 
-
 '''
 cardStats -> <Level> <Attack> <Health> <Ability> <Tribe>
 goldencardStats -> <Attack> <Health> <Ability>
@@ -80,7 +81,6 @@ Dragon - 1              용족
 Mech - 2                기계
 Murloc - 3              멀록
 '''
-
 
 def startTimer():
     global sec
@@ -198,32 +198,52 @@ def attack(attackerNum, whoTurn):  # 공격(공격하는 유닛, 플레이어)
             if opponentGround[i].ability == 4:
                 tauntArr.append(i)
         if len(tauntArr) != 0:
-            tmp = rd.randint(0, len(tauntArr))
+            tmp = rd.randint(0, len(tauntArr)-1)
             opponentGround[tauntArr[tmp]].fighthealth -= playerGround[attackerNum].attack
             playerGround[attackerNum].fighthealth -= opponentGround[tauntArr[tmp]].attack
         else:
-            tmp = rd.randint(0, len(opponentGround))
-            opponentGround[tauntArr[tmp]].fighthealth -= playerGround[attackerNum].attack
-            playerGround[attackerNum].fighthealth -= opponentGround[tauntArr[tmp]].attack
+            tmp = rd.randint(0, len(opponentGround)-1)
+            opponentGround[tmp].fighthealth -= playerGround[attackerNum].attack
+            playerGround[attackerNum].fighthealth -= opponentGround[tmp].attack
 
     elif whoTurn == "opponent":
         for i in range(len(playerGround)):
             if playerGround[i].ability == 4:
                 tauntArr.append(i)
         if len(tauntArr) != 0:
-            tmp = rd.randint(0, len(tauntArr))
+            tmp = rd.randint(0, len(tauntArr)-1)
             playerGround[tauntArr[tmp]].fighthealth -= opponentGround[attackerNum].attack
             opponentGround[attackerNum].fighthealth -= playerGround[tauntArr[tmp]].attack
         else:
-            tmp = rd.randint(0, len(opponentGround))
-            playerGround[tauntArr[tmp]].fighthealth -= opponentGround[attackerNum].attack
-            opponentGround[attackerNum].fighthealth -= playerGround[tauntArr[tmp]].attack
+            tmp = rd.randint(0, len(playerGround)-1)
+            print(tmp)
+            playerGround[tmp].fighthealth -= opponentGround[attackerNum].attack
+            opponentGround[attackerNum].fighthealth -= playerGround[tmp].attack
 
 
 def heroAbility(heroNumber): # 우두머리 능력
     global gold
     if gold > 1:
         pass
+
+def printGround():
+    for i in range(len(playerGround)):
+        screen.blit(playerGround[i].img,(i*130, 300))
+        text1 = 'Health: '+str(playerGround[i].fighthealth)
+        healthimg = font30.render(text1, True, WHITE)
+        screen.blit(healthimg, (i*130, 430))
+        text1 = 'Attack: ' + str(playerGround[i].fightattack)
+        attackimg = font30.render(text1, True, WHITE)
+        screen.blit(attackimg, (i*130, 460))
+    for i in range(len(opponentGround)):
+        screen.blit(opponentGround[i].img, (i*130,0))
+        text1 = 'Health: ' + str(opponentGround[i].fighthealth)
+        healthimg = font30.render(text1, True, WHITE)
+        screen.blit(healthimg, (i * 130, 130))
+        text1 = 'Attack: ' + str(opponentGround[i].fightattack)
+        attackimg = font30.render(text1, True, WHITE)
+        screen.blit(attackimg, (i * 130, 160))
+
 
 def fightTurn():  # 전투 단계
     screen.fill(BLACK)
@@ -236,7 +256,6 @@ def fightTurn():  # 전투 단계
     #    opponentGround = copy.deepcopy(p3Ground)
     #elif tmp == 3:
     #    opponentGround = copy.deepcopy(p4Ground)
-    print(len(opponentGround))
     if len(opponentGround) > len(playerGround):
         first = "player"
     elif len(opponentGround) == len(playerGround):
@@ -247,11 +266,7 @@ def fightTurn():  # 전투 단계
             first = "opponent"
     else:
         first = "opponent"
-    for i in range(len(playerGround)):
-        screen.blit(playerGround[i].img,(i*130, 300))
-    for i in range(len(opponentGround)):
-        screen.blit(opponentGround[i].img, (i*130,0))
-
+    printGround()
 
     # 여기까지 선공 정하기 구현
     if first == "player":
@@ -261,6 +276,7 @@ def fightTurn():  # 전투 단계
                     break
                 else:
                     attack(i, "player")
+
             else:
                 attack(i, "opponent")
                 if i > len(playerGround) - 1:
@@ -282,7 +298,7 @@ def fightTurn():  # 전투 단계
                     attack(i, "opponent")
 
 def buyTurn():  # 고용 단계
-    global gold, max_gold, upgrade_cost, max_gold, upgraded, freezed, shopCard_number, sec, Round, opponentGround, tempGround
+    global gold, max_gold, upgrade_cost, max_gold, upgraded, freezed, shopCard_number, sec, Round, opponentGround, tempGround, cardList
     Round += 1
 
     start_time = time.time()
@@ -300,8 +316,9 @@ def buyTurn():  # 고용 단계
     startTimer()
     opponentGround=tempGround[Round-1].split()
     opponentGround=list(map(int,opponentGround))
-    print(opponentGround[0])
-    print(len(opponentGround))
+    for i in range(len(opponentGround)):
+        opponentGround[i]=cardList[opponentGround[i]]
+        print(opponentGround[i].name)
     while end_time - start_time < 20:
         end_time = time.time()
         for event in pg.event.get():
@@ -365,7 +382,9 @@ def init():  # init
         if not tmp: break
         tmp = tmp.strip()  # cardName.txt
         tmp2 = tmp2.strip().split()  # cardStats.txt
+        tmp2=list(map(int, tmp2))
         tmp3 = tmp3.strip().split()  # goldencardStats.txt
+        tmp3=list(map(int, tmp3))
         tempGround.append(tmp4)
         cardList.append(Card())
         cardList[i].name = tmp
@@ -378,6 +397,7 @@ def init():  # init
 
         cardList[i].level = tmp2[0]
         cardList[i].attack = tmp2[1]
+        cardList[i].fightattack = tmp2[1]
         cardList[i].health = tmp2[2]
         cardList[i].fighthealth = tmp2[2]
         cardList[i].ability = tmp2[3]

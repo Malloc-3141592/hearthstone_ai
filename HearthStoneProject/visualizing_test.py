@@ -41,8 +41,8 @@ buylistimg=font30.render(text1, True, WHITE)
 screen.blit(buylistimg, (20,0))
 
 screen.blit(cardImg[0], (0, 40))
-screen.blit(cardImg[1], (130, 40))
-screen.blit(cardImg[2], (260, 40))
+screen.blit(cardImg[1], (200, 40))
+screen.blit(cardImg[2], (400, 40))
 text1 = 'Freezed'
 freezedimg = font30.render(text1, True, YELLOW)
 screen.blit(freezedimg, (20, 350))
