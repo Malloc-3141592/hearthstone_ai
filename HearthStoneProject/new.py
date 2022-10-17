@@ -198,7 +198,7 @@ def buy(buyCard):  # 하수인 고용
             playerCard[tmp].fighthealth=playerCard[tmp].health
             playerCard[tmp].fightattack=playerCard[tmp].attack
         buyList.remove(buyCard)
-        printText()
+        printUI()
     else:
         print('error')
 
