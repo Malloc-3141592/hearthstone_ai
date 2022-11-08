@@ -157,6 +157,7 @@ def reset():  # 전장 새로고침
 
 def freeze():  # 전장 빙결
     global freezed
+    discover()
     freezed = not freezed
 
 
@@ -171,10 +172,13 @@ def upgrade():  # 선술집 강화
     printText()
 
 def discover():
-    tmp_1 = rd.randint(cardBound[shopLevel], cardBound[shopLevel + 1])
-    tmp_2 = rd.randint(cardBound[shopLevel], cardBound[shopLevel + 1])
-    tmp_3 = rd.randint(cardBound[shopLevel], cardBound[shopLevel + 1])
-
+    tmp_1 = rd.randint(cardBound[shopLevel], cardBound[shopLevel + 1]-1)
+    screen.blit(cardImg[tmp_1], (300, 500))
+    tmp_2 = rd.randint(cardBound[shopLevel], cardBound[shopLevel + 1]-1)
+    screen.blit(cardImg[tmp_2], (510, 500))
+    tmp_3 = rd.randint(cardBound[shopLevel], cardBound[shopLevel + 1]-1)
+    screen.blit(cardImg[tmp_3], (720, 500))
+    pg.display.flip()
 
 
 def buy(boughtNumber):  # 하수인 고용
@@ -189,7 +193,7 @@ def buy(boughtNumber):  # 하수인 고용
                 playerCard.remove(buyCard)
                 # putDown(buyCard)
             playerGoldenCard.append(buyCard)
-            # discover()
+            discover()
         buyList.remove(buyCard)
         printText()
     else:
