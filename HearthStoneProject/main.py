@@ -3,7 +3,6 @@ import pygame as pg  # pygame library
 import time
 from pygame.locals import *
 import threading
-
 import copy
 import sys
 input=sys.stdin.readline
@@ -16,10 +15,12 @@ class Card:
         self.fighthealth = 0
         self.fightattack = 0
         self.alive=True
+        self.golden=False
         self.tribe = 0
         self.img = 0
         self.level = 0
         self.ability = 0
+        self.abilused=False
         self.star = 0 #하수인 별
         self.goldenHealth = 0
         self.goldenAttack = 0
@@ -36,10 +37,8 @@ YELLOW = (255,255,0)
 sec = 1
 Round = 0
 
-end_time = 5
+end_time = 10
 playerCard = []  # 플레이어가 들고 있는 카드
-playerGoldenCard = []  # 플레이어가 들고 있는 황금 카드
-opponentGoldenCard = []
 cardImg = []
 goldencardImg = []
 cardList = []
@@ -113,12 +112,12 @@ def printText():
         text1 = 'Freezed'
         freezedimg = font30.render(text1, True, WHITE)
         screen.blit(freezedimg, (20, 450))
-    for i in range(len(playerCard)):
-        tmp = cardList.index(playerCard[i])
-        screen.blit(cardImg[tmp], (i * 210 + 300, 250))
-    for i in range(len(playerGoldenCard)):
-        tmp = cardList.index(playerGoldenCard[i])
-        screen.blit(goldencardImg[tmp], (i * 210 + 300, 250))
+    for i in range(len(playerGround)):
+        tmp = cardList.index(playerGround[i])
+        if playerGround[i].golden:
+            screen.blit(goldencardImg[tmp], (i*210+300, 400))
+        else:
+            screen.blit(cardImg[tmp], (i * 210 + 300, 250))
 
     text1 = 'Buy List'
     buylistimg = font30.render(text1, True, WHITE)
@@ -144,6 +143,7 @@ def reset():  # 전장 새로고침
     for i in range(shopCard_number[shopLevel - 1]):
         done = False
         while not done:
+            print('reset')
             tmp = rd.randrange(0, cardBound[shopLevel] - 1)
             if tmp <= cardBound[1]:
                 if cardCount[tmp] < cardLimit[0]: done = True
@@ -157,7 +157,6 @@ def reset():  # 전장 새로고침
 
 def freeze():  # 전장 빙결
     global freezed
-    discover()
     freezed = not freezed
 
 
@@ -179,30 +178,43 @@ def discover():
     tmp_3 = rd.randint(cardBound[shopLevel], cardBound[shopLevel + 1]-1)
     screen.blit(cardImg[tmp_3], (720, 500))
     pg.display.flip()
+    a = 0
+    while a == 0:
+        print('discover')
+        for event in pg.event.get():
+            if event.type == KEYDOWN:
+                if event.key == pg.K_1:
+                    playerGround.append(cardList[tmp_1])
+                    a = 1
 
+                elif event.key == pg.K_2:
+                    playerGround.append(cardList[tmp_2])
+                    a = 1
+
+                elif event.key == pg.K_3:
+                    playerGround.append(cardList[tmp_3])
+                    a = 1
 
 def buy(boughtNumber):  # 하수인 고용
     global gold
     buyCard = buyList[boughtNumber]
     if 3 <= gold:
         gold -= 3
-        playerCard.append(buyCard)
         playerGround.append(buyCard)
-        if playerCard.count(buyCard) == 3:
-            for i in range(3):
-                playerCard.remove(buyCard)
-                # putDown(buyCard)
-            playerGoldenCard.append(buyCard)
+        if playerGround.count(buyCard) == 3:
+            for i in range(2):
+                playerGround.remove(buyCard)
+            playerGround[len(playerGround)-1].golden=True
             discover()
         buyList.remove(buyCard)
         printText()
     else:
         print('error')
 
-def putDown(cardNum):
-    if len(playerGround)!=7:
-        playerGround.append(cardList[cardNum])
-
+def checkBattleCry(cardNum):
+    # 전투의 함성
+    if cardList[cardNum].ability==1:
+        print('battlecry')
 
 def checkDeath():
     # 플레이어 전장이 비었으면 1, 상대 전장이 비었으면 2, 다 살아있으면 0 리턴, 둘 다 ㅂㅇ며
@@ -229,7 +241,6 @@ def checkDeath():
 
 def attack(attackerNum, whoTurn):  # 공격(공격하는 유닛, 플레이어)
     global playerGround, opponentGround
-
     tauntArr = []  # taunted enemy list
     time.sleep(0.5)
     if whoTurn == "player":
@@ -238,12 +249,15 @@ def attack(attackerNum, whoTurn):  # 공격(공격하는 유닛, 플레이어)
                 tauntArr.append(i)
         if len(tauntArr) != 0:
             tmp = rd.randint(0, len(tauntArr)-1)
-            opponentGround[tauntArr[tmp]].fighthealth -= playerGround[attackerNum].attack
-            playerGround[attackerNum].fighthealth -= opponentGround[tauntArr[tmp]].attack
-            if opponentGround[tauntArr[tmp]].fighthealth<=0:
-                opponentGround[tauntArr[tmp]].alive=False
-            if playerGround[attackerNum].fighthealth<=0:
-                playerGround[attackerNum].alive=False
+            if opponentGround[tauntArr[tmp]].ability==3 and opponentGround[tauntArr[tmp]].abilused==False:
+                opponentGround[tauntArr[tmp]].abilused=True
+            else:
+                opponentGround[tauntArr[tmp]].fighthealth -= playerGround[attackerNum].fightattack
+                playerGround[attackerNum].fighthealth -= opponentGround[tauntArr[tmp]].fightattack
+                if opponentGround[tauntArr[tmp]].fighthealth<=0:
+                    opponentGround[tauntArr[tmp]].alive=False
+                if playerGround[attackerNum].fighthealth<=0:
+                    playerGround[attackerNum].alive=False
         else:
             tmp = rd.randint(0, len(opponentGround)-1)
             opponentGround[tmp].fighthealth -= playerGround[attackerNum].attack
@@ -286,6 +300,7 @@ def printGround():
     screen.fill(BLACK)
     for i in range(len(playerGround)):
         if playerGround[i].alive:
+            #여따가 골카 이미지 출력하는 if문 만들기
             screen.blit(playerGround[i].img,(i*130, 300))
             text1 = 'Health: '+str(playerGround[i].fighthealth)
             healthimg = font30.render(text1, True, WHITE)
@@ -317,7 +332,22 @@ def fightTurn():  # 전투 단계
     #elif tmp == 3:
     #    opponentGround = copy.deepcopy(p4Ground)
     for i in range(len(playerGround)):
-        print(playerGround[i])
+        playerGround[i].abilused=False
+        if playerGround[i].golden:
+            playerGround[i].fighthealth = playerGround[i].goldenhealth
+            playerGround[i].fightattack = playerGround[i].goldenattack
+        else:
+            playerGround[i].fighthealth = playerGround[i].health
+            playerGround[i].fightattack = playerGround[i].attack
+
+    for i in range(len(opponentGround)):
+        opponentGround[i].abilused=False
+        if opponentGround[i].golden:
+            opponentGround[i].fighthealth = opponentGround[i].goldenhealth
+            opponentGround[i].fightattack = opponentGround[i].goldenattack
+        else:
+            opponentGround[i].fighthealth = opponentGround[i].health
+            opponentGround[i].fightattack = opponentGround[i].attack
 
     if len(opponentGround) > len(playerGround):
         first = "player"
@@ -336,6 +366,7 @@ def fightTurn():  # 전투 단계
     # 여기까지 선공 정하기 구현
     if first == "player":
         while 1:
+            print('fight turn')
             if checkDeath() == 1:
                 for i in range(len(playerGround)):
                     if playerGround[i].alive == True:
@@ -368,7 +399,6 @@ def fightTurn():  # 전투 단계
             elif checkDeath() == 3:
                 break
 
-
             while opponentGround[y].alive!=True:
                 y+=1
                 if y > len(opponentGround) - 1:
@@ -376,6 +406,7 @@ def fightTurn():  # 전투 단계
             attack(y,"opponent")
     else:
         while 1:
+            print('fightturn_2')
             if checkDeath() == 1:
                 for i in range(len(playerGround)):
                     if playerGround[i].alive == True:
@@ -421,7 +452,7 @@ def buyTurn():  # 고용 단계
     global gold, max_gold, upgrade_cost, max_gold, upgraded, freezed, shopCard_number, sec, Round, opponentGround, tempGround, cardList
     Round += 1
     start_time = time.time()
-    end_time = 0
+    etime = 0
     if max_gold < 10:
         max_gold += 1
     gold = max_gold
@@ -437,17 +468,15 @@ def buyTurn():  # 고용 단계
     startTimer()
     opponentGround=tempGround[Round-1].split()
     opponentGround=list(map(int,opponentGround))
-    for i in range(len(opponentGoldenCard)):
-        opponentGoldenCard.remove()
 
     for i in range(len(opponentGround)):
         if opponentGround[i] < 100:
             opponentGround[i]=cardList[opponentGround[i]]
         else :
-            opponentGoldenCard.append(opponentGround[i] / 100)
-            opponentGround.remove()
-    while end_time - start_time < 5:
-        end_time = time.time()
+            opponentGround[i].golden=True
+    while etime - start_time < end_time:
+        print('buyturn')
+        etime = time.time()
         for event in pg.event.get():
             if event.type == QUIT:
                 pg.quit()
@@ -483,6 +512,8 @@ def buyTurn():  # 고용 단계
                 elif event.key == pg.K_6:
                     if len(buyList) > 5:
                         buy(5)
+                elif event.key == pg.K_a:
+                    heroAbility(0)
     for i in range(0, len(playerGround)):
         playerGround[i].fighthealth=playerGround[i].health
         playerGround[i].alive = True
