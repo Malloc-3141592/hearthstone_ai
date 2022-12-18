@@ -34,7 +34,7 @@ while True:
 screen.fill(BLACK)
 text1 = 'Time: 1'
 timerimg = font30.render(text1, True, WHITE)
-screen.blit(timerimg, (20, 305))
+screen.blit(timerimg, (20, 505))
 
 text1='Buy List'
 buylistimg=font30.render(text1, True, WHITE)
@@ -45,20 +45,20 @@ screen.blit(cardImg[1], (200, 40))
 screen.blit(cardImg[2], (400, 40))
 text1 = 'Freezed'
 freezedimg = font30.render(text1, True, YELLOW)
-screen.blit(freezedimg, (20, 350))
+#screen.blit(freezedimg, (20, 350))
 screen.blit(cardImg[4], (300, 500))     # i*130+300, 500
 screen.blit(cardImg[5], (430, 500))
 screen.blit(cardImg[6], (560, 500))
 
 text1 = 'Gold: 30'
 goldimg = font30.render(text1, True, WHITE)
-screen.blit(goldimg, (20, 200))
+screen.blit(goldimg, (20, 300))
 text2 = 'Level: 4'
 levelimg = font30.render(text2, True, WHITE)
-screen.blit(levelimg, (20, 235))
+screen.blit(levelimg, (20, 340))
 text1 = 'Upgrade Cost: 5'
 upgrade_costimg = font30.render(text1, True, WHITE)
-screen.blit(upgrade_costimg, (20, 270))
+screen.blit(upgrade_costimg, (20, 380))
 
 screen.blit(rrButton, (150,0))
 screen.blit(upButton, (210,0))

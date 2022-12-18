@@ -1,4 +1,4 @@
-#221218_21:48 ai_train
+# 221218_21:48 ai_train
 import random as rd
 import pygame as pg  # pygame library
 import time
@@ -77,31 +77,34 @@ Mech - 2                기계
 Murloc - 3              멀록
 '''
 
+
 def sendData():
-    f1=open('gamedata.txt', 'w')
-    f1.write(str(gold)+'\n')
-    f1.write(str(shopLevel)+'\n')
-    f1.write(str(playerHealth)+'\n')
-    f1.write(str(shopLevel_cost)+'\n')
+    f1 = open('gamedata.txt', 'w')
+    f1.write(str(gold) + '\n')
+    f1.write(str(shopLevel) + '\n')
+    f1.write(str(playerHealth) + '\n')
+    f1.write(str(shopLevel_cost) + '\n')
     for i in range(len(buyList)):
-        f1.write(str(buyList[i].number)+' ')
+        f1.write(str(buyList[i].number) + ' ')
     f1.write('\n')
-    t1=[]
-    t2=[]
+    t1 = []
+    t2 = []
     for i in range(len(playerGround)):
         if playerGround[i].golden:
             t1.append(playerGround[i].number)
         else:
             t2.append(playerGround[i].number)
     for i in range(len(t2)):
-        f1.write(str(t2[i])+' ')
+        f1.write(str(t2[i]) + ' ')
     f1.write('\n')
     for i in range(len(t1)):
-        f1.write(str(t1[i]+' '))
+        f1.write(str(t1[i] + ' '))
     f1.close()
+
 
 def receiveData():
     f = open('gameaction.txt', 'r')
+
 
 def reset():  # 전장 새로고침
     buyList.clear()
@@ -109,9 +112,11 @@ def reset():  # 전장 새로고침
         tmp = rd.randrange(0, cardBound[shopLevel])
         buyList.append(copy.deepcopy(cardList[tmp]))
 
+
 def freeze():  # 전장 빙결
     global freezed
     freezed = not freezed
+
 
 def upgrade():  # 선술집 강화
     global gold, upgrade_cost, shopLevel, upgraded
@@ -125,22 +130,29 @@ def upgrade():  # 선술집 강화
                 upgrade_cost = shopLevel_cost[shopLevel - 1]
             upgraded = True
 
+
 def discover():
     tmp_1 = rd.randint(cardBound[shopLevel], cardBound[shopLevel + 1] - 1)
     tmp_2 = rd.randint(cardBound[shopLevel], cardBound[shopLevel + 1] - 1)
     tmp_3 = rd.randint(cardBound[shopLevel], cardBound[shopLevel + 1] - 1)
+    pg.display.flip()
     time.sleep(1)
-    if event.key == pg.K_1:
-        playerGround.append(copy.deepcopy(cardList[tmp_1]))
-        d = False
+    d = True
+    while d:
+        for event in pg.event.get():
+            if event.type == KEYDOWN:
+                if event.key == pg.K_1:
+                    playerGround.append(copy.deepcopy(cardList[tmp_1]))
+                    d = False
 
-    elif event.key == pg.K_2:
-        playerGround.append(copy.deepcopy(cardList[tmp_2]))
-        d = False
+                elif event.key == pg.K_2:
+                    playerGround.append(copy.deepcopy(cardList[tmp_2]))
+                    d = False
 
-    elif event.key == pg.K_3:
-        playerGround.append(copy.deepcopy(cardList[tmp_3]))
-        d = False
+                elif event.key == pg.K_3:
+                    playerGround.append(copy.deepcopy(cardList[tmp_3]))
+                    d = False
+
 
 def buy(boughtNumber):  # 하수인 고용
     global gold
@@ -161,6 +173,7 @@ def buy(boughtNumber):  # 하수인 고용
             del buyList[boughtNumber]
     else:
         print('error')
+
 
 def checkDeath():
     # 플레이어 전장이 비었으면 1, 상대 전장이 비었으면 2, 다 살아있으면 0 리턴, 둘 다 ㅂㅇ며
@@ -262,6 +275,7 @@ def attack(attackerNum, whoTurn):  # 공격(공격하는 유닛, 플레이어)
                 playerGround[tmp].alive = False
             if opponentGround[attackerNum].fightHealth <= 0:
                 opponentGround[attackerNum].alive = False
+
 
 def fightTurn():  # 전투 단계
     global playerGround, opponentGround, p2Ground, p3Ground, p4Ground, op1Health, op2Health, op3Health, playerHealth, op
