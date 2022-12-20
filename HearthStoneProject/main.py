@@ -44,7 +44,9 @@ playerHealth = 20 #플레이어 체력
 op1Health = 20
 op2Health = 20
 op3Health = 20
-tempGround =[]
+p2tGround=[]
+p3tGround=[]
+p4tGround=[]
 p2Ground = []
 p3Ground = []
 p4Ground = []
@@ -85,12 +87,6 @@ Dragon - 1              용족
 Mech - 2                기계
 Murloc - 3              멀록
 '''
-
-def sendData():
-    pass
-
-def receiveData():
-    f=open('gameaction.txt', 'r')
 
 def printText():
     global freezed
@@ -160,11 +156,16 @@ def upgrade():  # 선술집 강화
 
 def discover():
     screen.fill(BLACK)
-    tmp_1 = rd.randint(cardBound[shopLevel], cardBound[shopLevel + 1]-1)
+    if shopLevel<6:
+        tmp_1 = rd.randint(cardBound[shopLevel], cardBound[shopLevel + 1])
+        tmp_2 = rd.randint(cardBound[shopLevel], cardBound[shopLevel + 1])
+        tmp_3 = rd.randint(cardBound[shopLevel], cardBound[shopLevel + 1])
+    else:
+        tmp_1=rd.randint(cardBound[5], cardBound[6])
+        tmp_2 = rd.randint(cardBound[5], cardBound[6])
+        tmp_3 = rd.randint(cardBound[5], cardBound[6])
     screen.blit(cardImg[tmp_1], (300, 480))
-    tmp_2 = rd.randint(cardBound[shopLevel], cardBound[shopLevel + 1]-1)
     screen.blit(cardImg[tmp_2], (510, 480))
-    tmp_3 = rd.randint(cardBound[shopLevel], cardBound[shopLevel + 1]-1)
     screen.blit(cardImg[tmp_3], (720, 480))
     pg.display.flip()
     time.sleep(1)
@@ -194,7 +195,7 @@ def buy(boughtNumber):  # 하수인 고용
             playerGround.append(copy.deepcopy(buyCard))
             count=[]
             for i in range(len(playerGround)-1):
-                if playerGround[i].number==playerGround[-1].number:
+                if playerGround[i].number==buyCard.number:
                     count.append(i)
             if len(count) == 2:
                 for i in range(2):
@@ -206,7 +207,7 @@ def buy(boughtNumber):  # 하수인 고용
     else:
          print('error')
 
-def checkBattleCry(cardNum):
+def checkBattleCry(cardNum):        #안쓰는거
     # 전투의 함성
     if cardList[cardNum].ability==1:
         print('battlecry')
@@ -362,16 +363,18 @@ def fightTurn():  # 전투 단계
     screen.fill(BLACK)
     global playerGround, opponentGround, p2Ground, p3Ground, p4Ground, op1Health, op2Health, op3Health, playerHealth,op
     first = 0  # first=1이면 내가 선공, 0이면 상대가 선공
-    '''tmp = rd.randint(0,3)  # 어떤 상대와 싸우는지 정함
+    tmp = rd.randint(0,2)  # 어떤 상대와 싸우는지 정함
+    if opAlive[0]==False and opAlive[1]==False and opAlive[2]==False:
+        print('Player win')
     while not opAlive[tmp]:
-        tmp=rd.randint(0,3)
+        tmp=rd.randint(0,2)
     op=tmp
     if tmp == 0:
         opponentGround = copy.deepcopy(p2Ground)
     elif tmp == 1:
         opponentGround = copy.deepcopy(p3Ground)
     elif tmp == 2:
-        opponentGround = copy.deepcopy(p4Ground)'''
+        opponentGround = copy.deepcopy(p4Ground)
     for i in range(len(playerGround)):
         playerGround[i].abilused=False
         playerGround[i].alive=True
@@ -391,7 +394,7 @@ def fightTurn():  # 전투 단계
         else:
             opponentGround[i].fightHealth = opponentGround[i].health
             opponentGround[i].fightAttack = opponentGround[i].attack
-
+    if checkDeath(): return
     if len(opponentGround) > len(playerGround):
         first = "player"
     elif len(opponentGround) == len(playerGround):
@@ -414,14 +417,14 @@ def fightTurn():  # 전투 단계
                     if x > len(playerGround) - 1:
                         x=0
                 attack(x,"player")
-                if checkDeath(): break
+            if checkDeath(): break
             if len(opponentGround)>y:
                 while opponentGround[y].alive!=True:
                     y+=1
                     if y > len(opponentGround) - 1:
                         y=0
                 attack(y,"opponent")
-                if checkDeath(): break
+            if checkDeath(): break
     else:
         while 1:
             if len(opponentGround)>y:
@@ -430,39 +433,52 @@ def fightTurn():  # 전투 단계
                     if y > len(opponentGround)-1:
                         y=0
                 attack(y, "opponent")
-                if checkDeath(): break
+            if checkDeath(): break
             if len(playerGround)>x:
                 while playerGround[x].alive == False:
                     x+=1
                     if x > len(playerGround) - 1:
                         x=0
                 attack(x, "player")
-                if checkDeath(): break
+            if checkDeath(): break
     printGround()
     time.sleep(1)
 
 def buyTurn():  # 고용 단계
-    global gold, max_gold, upgrade_cost, max_gold, upgraded, freezed, shopCard_number, sec, Round, opponentGround, tempGround, cardList
+    global gold, max_gold, upgrade_cost, max_gold, upgraded, freezed, shopCard_number, sec, Round, opponentGround, p2Ground, cardList, p2tGround, p3Ground, p3tGround, p4Ground, p4tGround
     Round += 1
     if max_gold < 10:
         max_gold += 1
     gold = max_gold
     if not freezed:
         reset()
+    sec = 1
     if not upgraded:
         if upgrade_cost > 1:
             upgrade_cost -= 1
+    upgraded = False
     printText()
-    sec = 1
-    opponentGround=tempGround[Round-1].split()
-    opponentGround=list(map(int,opponentGround))
-
-    for i in range(len(opponentGround)):
-        if opponentGround[i] < 100:
-            opponentGround[i]=copy.deepcopy(cardList[opponentGround[i]])
+    p2Ground = p2tGround[Round - 1]
+    for i in range(len(p2Ground)):
+        if p2Ground[i] < 100:
+            p2Ground[i] = copy.deepcopy(cardList[p2Ground[i]])
         else:
-            opponentGround[i]=copy.deepcopy(cardList[opponentGround[i]//100])
-            opponentGround[i].golden=True
+            p2Ground[i] = copy.deepcopy(cardList[p2Ground[i] // 100])
+            p2Ground[i].golden = True
+    p3Ground = p3tGround[Round - 1]
+    for i in range(len(p3Ground)):
+        if p3Ground[i] < 100:
+            p3Ground[i] = copy.deepcopy(cardList[p3Ground[i]])
+        else:
+            p3Ground[i] = copy.deepcopy(cardList[p3Ground[i] // 100])
+            p3Ground[i].golden = True
+    p4Ground = p4tGround[Round - 1]
+    for i in range(len(p4Ground)):
+        if p4Ground[i] < 100:
+            p4Ground[i] = copy.deepcopy(cardList[p4Ground[i]])
+        else:
+            p4Ground[i] = copy.deepcopy(cardList[p4Ground[i] // 100])
+            p4Ground[i].golden = True
     d=False
     while not d:
         for event in pg.event.get():
@@ -503,15 +519,30 @@ def buyTurn():  # 고용 단계
                     heroAbility(0)
                 elif event.key == pg.K_n:
                     d=True
-    upgraded = False
 
 def init():  # init
-    global upgrade_cost, shopLevel_cost, freezed, upgraded, gold, max_gold
+    global upgrade_cost, shopLevel_cost, freezed, upgraded, gold, max_gold, upgraded
     cardName_file = open('cardName.txt')
     cardStats_file = open('cardStats.txt')
     goldencardStats_file = open('goldencardStats.txt')
-    opponentGround_file = open('op1.txt')
-
+    tmpList=[]
+    opAlive = [True] * 3
+    upgraded=False
+    t=rd.randint(1,9)
+    while t in tmpList:
+        t = rd.randint(1, 9)
+    tmpList.append(t)
+    p2Ground_file = open('op/op'+str(t)+'.txt', 'r')
+    t = rd.randint(1, 9)
+    while t in tmpList:
+        t = rd.randint(1, 9)
+    tmpList.append(t)
+    p3Ground_file = open('op/op' + str(t) + '.txt','r')
+    t = rd.randint(1, 9)
+    while t in tmpList:
+        t = rd.randint(1, 9)
+    tmpList.append(t)
+    p4Ground_file = open('op/op' + str(t) + '.txt','r')
     i = 0
     upgrade_cost = shopLevel_cost[0]
     freezed = False
@@ -521,17 +552,17 @@ def init():  # init
 
     # 카드 이름 입력
     while True:
-        tmp = cardName_file.readline()
-        tmp2 = cardStats_file.readline()
-        tmp3 = goldencardStats_file.readline()
-        tmp4 = opponentGround_file.readline()
+        tmp = cardName_file.readline().strip()
+        tmp2 = list(map(int, cardStats_file.readline().strip().split()))
+        tmp3 =list(map(int, goldencardStats_file.readline().strip().split()))
+        o1=list(map(int, p2Ground_file.readline().strip().split()))
+        o2=list(map(int, p3Ground_file.readline().strip().split()))
+        o3=list(map(int, p4Ground_file.readline().strip().split()))
         if not tmp: break
-        tmp = tmp.strip()  # cardName.txt
-        tmp2 = tmp2.strip().split()  # cardStats.txt
-        tmp2=list(map(int, tmp2))
-        tmp3 = tmp3.strip().split()  # goldencardStats.txt
-        tmp3=list(map(int, tmp3))
-        tempGround.append(tmp4)
+        p2tGround.append(o1)
+        p3tGround.append(o2)
+        p4tGround.append(o3)
+
         cardList.append(Card())
         cardList[i].name = tmp
         cardList[i].number=i
@@ -554,7 +585,9 @@ def init():  # init
     cardName_file.close()
     cardStats_file.close()
     goldencardStats_file.close()
-    # 영웅은 고정으로 진행(일단)
+    p2Ground_file.close()
+    p3Ground_file.close()
+    p4Ground_file.close()
 
 init()
 done = False

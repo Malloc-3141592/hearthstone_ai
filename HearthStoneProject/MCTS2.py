@@ -1,3 +1,4 @@
+# deltahp에 가중치 적용
 import numpy as np
 from collections import defaultdict
 import time
@@ -11,12 +12,15 @@ n=1
 tree_num=1
 sys.setrecursionlimit(10**6)
 
+def restart():
+    os.execl(sys.executable, sys.executable, *sys.argv)
+
 def createDirectory(directory):
     try:
         if not os.path.exists(directory):
             os.makedirs(directory)
     except OSError:
-        print("Failed to create the directory.")
+        print("Error: Failed to create the directory.")
 
 class MonteCarloTreeSearchNode():
     def __init__(self, state, num, act, parent):
@@ -43,8 +47,18 @@ class MonteCarloTreeSearchNode():
         if self.state[0] >= 1:
             self._untried_actions.append("3")
 
+        #self._untried_actions.append("4")
         self._untried_actions.append("5")
         rd.shuffle(self._untried_actions)
+
+
+    def q(self):  # win-loss 리턴
+        wins = self._results[1]
+        loses = self._results[-1]
+        return wins - loses
+
+    def number_of_visits(self):
+        return self._number_of_visits
 
     def expand(self):  # generate next node by action
         global n, tree_num
@@ -64,7 +78,7 @@ class MonteCarloTreeSearchNode():
         1/ state(children)
         2/ parent number
         3/ number of visits
-        4/ result : plushp minushp
+        4/ result : win lose
         '''
         for i in range(7):
             file.write(str(child_node.state[i])+' ')
@@ -84,9 +98,9 @@ class MonteCarloTreeSearchNode():
                     deltahp = int(f2.readline().strip())
                     f2.close()
                     if deltahp>0:
-                        self.backpropagate(result=1, deltahp=deltahp)
+                        self.backpropagate(result=1, deltahp=deltahp, num=0)
                     else:
-                        self.backpropagate(result=-1, deltahp=-deltahp)
+                        self.backpropagate(result=-1, deltahp=-deltahp, num=0)
                     print('deltahp:', deltahp)
                     break
                 except:
@@ -94,17 +108,34 @@ class MonteCarloTreeSearchNode():
             f2 = open('deltahp.txt', 'w')
             f2.close()
             if next_state[0] == -1:
-                print('next tree')
+                print('next')
                 tree_num += 1
                 main()
                 return
         child_node.expand()
 
-    def backpropagate(self, result, deltahp):       # result는 -1 아니면 1
+    def is_fully_expanded(self):
+        return len(self._untried_actions) == 0  # 시도 안한 행동이 없다면 true 리턴
+
+    def best_child(self, c_param=0.1):
+        choices_weights = [(c.q() / c.number_of_visits()) + c_param * np.sqrt(
+            (2 * np.log(self.number_of_visits()) / c.number_of_visits())) for c in self.children]
+        return self.children[np.argmax(choices_weights)]
+
+    def best_action(self):
+        return self.best_child(c_param=0.1)
+
+    def backpropagate(self, result, deltahp, num):       # result는 -1 아니면 1
         self._number_of_visits += 1
-        self._results[result] += deltahp
+        self._results[result] += deltahp*(0.9**num)
         file = open('tree'+str(tree_num)+'/node_' + str(self.number) + '.txt', 'w')
 
+        '''
+        1/ state(children)
+        2/ parent number
+        3/ number of visits
+        4/ result : win lose
+        '''
         for i in range(7):
             file.write(str(self.state[i]) + ' ')
         file.write("\n")
@@ -119,8 +150,17 @@ class MonteCarloTreeSearchNode():
         file.write(str(self.action))
         file.write("\n")
         file.close()
-        if self.parent!=0:  # 부모 노드(최종노드)에 도달할때까지
-            self.parent.backpropagate(result, deltahp)
+        if self.parent!=0:  # 부모 노드에 도달할때까지
+            self.parent.backpropagate(result, deltahp, num+1)
+
+
+    def game_result(self):
+        '''
+        Modify according to your game or
+        needs. Returns 1 or 0 or -1 depending
+        on your state corresponding to win,
+        tie or a loss.
+        '''
 
     def move(self, action):
         f=open('gameaction.txt', 'w')
@@ -191,7 +231,12 @@ def main():
     root = MonteCarloTreeSearchNode(state=state_t, num=1, act=0, parent=0)
     n=1
     file = open('tree' + str(tree_num) + '/node_' + str(root.number) + '.txt', 'w')
-
+    '''
+    1/ state(children)
+    2/ parent number
+    3/ number of visits
+    4/ result : win lose
+    '''
     for i in range(7):
         file.write(str(root.state[i]) + ' ')
     file.write("\n")
@@ -203,6 +248,8 @@ def main():
     file.write(str(root.action))
     file.close()
     root.expand()
+
+    selected_node = root
 
 if __name__ == '__main__':
     main()
